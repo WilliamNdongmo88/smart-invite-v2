@@ -1,0 +1,63 @@
+
+networks: 
+  smart_invite_net:
+    driver: bridge
+
+services:
+  backend:
+    build: .
+
+    ports:
+      - "3001:3000"
+
+    volumes:
+      - ./.wwebjs_auth:/app/.wwebjs_auth
+
+    restart: always
+
+  dev-db:
+    image: mysql:8.1
+    container_name: res-smart_invite_dev
+    restart: always
+    environment:
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3308:3306"
+    networks:
+      - smart_invite_net
+    volumes:
+      - dev_db_data:/var/lib/mysql
+
+  prod-db:
+    image: mysql:8.1
+    container_name: res-smart_invite_prod
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3309:3306"
+    networks:
+      - smart_invite_net
+    volumes:
+      - prod_db_data:/var/lib/mysql
+  adminer:
+    image: adminer
+    container_name: adminer_smart_invite
+    restart: always
+    ports:
+      - "8084:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: dev-db
+    networks:
+      - smart_invite_net
+    depends_on:
+      - dev-db
+
+
+volumes:
+  dev_db_data:
+  prod_db_data:
