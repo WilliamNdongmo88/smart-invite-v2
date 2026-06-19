@@ -427,7 +427,7 @@ const login = async (req, res, next) => {
     }
 
     const user = await getUserByEmail(email);
-    console.warn('LOGIN USER:', user);
+    //console.log('user: ', user);
     if (!user) {
       return res.status(401).json({ error: 'Utilisateur non trouvé' });
     }
@@ -464,6 +464,7 @@ const login = async (req, res, next) => {
       accessToken,
       refreshToken
     });
+
   } catch (error) {
     console.error('LOGIN ERROR:', error.message);
     next(error);
@@ -485,14 +486,14 @@ const loginWithGoogle = async (req, res, next) => {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-    console.warm('GOOGLE PAYLOAD:', payload);
+    // //console.log('GOOGLE PAYLOAD:', payload);
 
     const { email, name, sub: googleId, picture } = payload;
     //console.log('Extracted Google user info:', { email, name, googleId, picture });
     // Ici, tu peux créer ou mettre à jour l’utilisateur dans ta DB
     
     let user = await getUserByEmail(email);
-    console.warn('LOGIN USER INFO:', user);
+    // //console.log('user info:', user);
     if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé. Veuillez vous inscrire avant.' });
 
     if(process.env.NODE_ENV !== 'test') {
