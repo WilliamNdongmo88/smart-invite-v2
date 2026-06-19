@@ -36,6 +36,7 @@ if (process.env.NODE_ENV === "production") {
 app.use(cors({
   origin: [
     process.env.API_URL,
+    "http://smart-invite.com",
     "https://www.smart-invite.com",
     "https://will-portfolio-rosy.vercel.app",
     "http://localhost:4200"
