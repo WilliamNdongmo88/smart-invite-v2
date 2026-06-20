@@ -329,6 +329,7 @@ async function getUserByEventId(eventId) {
             u.id AS organizerId,
             u.name,
             u.email,
+            u.phone,
             u.notification_mode,
             u.email_notifications,
             u.attendance_notifications,

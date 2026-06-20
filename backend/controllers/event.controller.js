@@ -290,7 +290,7 @@ const getAllEvents = async (req, res, next) => {
     
     const event = await getEventById(eventId);
     const payment = await getAllPayments();
-    console.log("payment: ", payment);
+    //console.log("payment: ", payment);
     if(maxGuests <= event.max_guests && payment[0].status == 'pending') await updateEventPaymentsByEventId(eventId, maxGuests);
 
     if (maxGuests < event.max_guests) {
@@ -356,7 +356,7 @@ const getAllEvents = async (req, res, next) => {
         } = eventInvitationNote;
 
         const event = await getEventInvitNote(eventId);
-        // //console.log('event: ', event);
+        //console.log('event: ', event);
         if(!event) throw new Error("La table de note de cet event n'existe pas");
         
         if(eventId == null){ eventId = event.event_id};
@@ -552,7 +552,7 @@ const getAllEvents = async (req, res, next) => {
         //console.log("guestConfirmedList:: ", guestConfirmedList);
         const pdfBuffer = await generateDualGuestListPdf(guestPresentList, guestConfirmedList, data);
         //console.log("pdfBuffer:: ", pdfBuffer);
-        //console.log("### data:", data);
+        console.log("### data:", data);
         if(data.notification_mode === 'email') await sendPdfByEmail(data, pdfBuffer);
         if(data.notification_mode === 'whatsapp') await sendPdfByWhatsapp(data, pdfBuffer);
     } catch (error) {

@@ -6,6 +6,7 @@ const { getGuestInvitationById, updateInvitationByChatId } = require('../models/
 const { getEventInvitNote } = require('../models/event_invitation_notes');
 const { getPdfUrlFromFirebase } = require('./qrCodeService');
 const { saveWhatsappTracking } = require( '../models/whatsapp-tracking' );
+const { createNotification } = require('../models/notification');
 
 let isReady = false;
 

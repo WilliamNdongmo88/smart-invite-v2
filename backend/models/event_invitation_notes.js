@@ -63,11 +63,12 @@ async function creatEventInvitNote(eventId, title, mainMessage, sousMainMessage,
 
 async function getEventInvitNote(eventId) {
   const [result] = await pool.query(`
-      SELECT *,
-      e.event_date
+      SELECT
+          evn.*,
+          e.event_date
       FROM EVENT_INVITATION_NOTES evn
-      LEFT JOIN EVENTS e ON e.id=evn.event_id
-      WHERE event_id=?
+      LEFT JOIN EVENTS e ON e.id = evn.event_id
+      WHERE evn.event_id = ?
   `,[eventId]);
 
   return result[0];
@@ -95,7 +96,8 @@ async function updateCodeEventInvNote(id, eventId, code) {
 async function updateEventInvitNote(id, eventId, title, mainMessage, sousMainMessage, eventTheme, 
   priorityColors, qrInstructions, dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
   topBandColor, bottomBandColor, textColor, pdfUrl, hasInvitationModelCard, code, logoUrl, heartIconUrl) {
-  const [result] = await pool.query(`
+
+    const [result] = await pool.query(`
     UPDATE EVENT_INVITATION_NOTES 
     SET event_id=?,
         title=?,
