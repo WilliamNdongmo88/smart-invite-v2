@@ -21,7 +21,7 @@ const add_checkin_p = async (req, res, next) => {
 const get_checkin_p = async (req, res, next) => {
     try {
         const existing = await getCheckinPByEventId(req.params.eventId);
-        console.log('[get_checkin_p] existing:', existing);
+        //console.log('[get_checkin_p] existing:', existing);
         if(!existing) return res.status(404).json({error: "Donnée non trouvé!"});
         return res.status(200).json(existing);
     } catch (error) {
