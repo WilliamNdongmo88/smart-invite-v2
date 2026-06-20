@@ -83,6 +83,43 @@ async function getEventAndGuestInfoByGuestId(guestId) {
   return rows[0] || null;
 }
 
+/**
+ * Bulk fetch — remplace N appels getEventAndGuestInfoByGuestId()
+ */
+async function getEventAndGuestInfoByGuestIds(guestIds) {
+  if (!Array.isArray(guestIds) || guestIds.length === 0) return [];
+  const placeholders = guestIds.map(() => '?').join(',');
+  const [rows] = await pool.execute(`
+    SELECT
+      c.id AS checkinId,
+      c.scan_status,
+      e.id AS eventId,
+      e.title,
+      e.event_location,
+      e.event_date,
+      e.organizer_id,
+      g.id AS guestId,
+      g.full_name AS guestName,
+      g.email,
+      g.table_number,
+      g.phone_number,
+      g.notification_mode,
+      g.rsvp_status,
+      g.plus_one_name_diet_restr,
+      g.has_plus_one,
+      g.plus_one_name,
+      g.dietary_restrictions,
+      u.id AS organizerId,
+      u.email AS emailOrganizer
+    FROM CHECKINS c
+    JOIN GUESTS g ON g.id = c.guest_id
+    JOIN EVENTS e ON c.event_id = e.id
+    JOIN USERS u ON u.id = e.organizer_id
+    WHERE g.id IN (${placeholders}) AND c.scan_status IN ('VALID', 'DUPLICATE')
+  `, guestIds);
+  return rows;
+}
+
 async function updateCheckin(checkinId, eventId, invitationId, scannedBy, scanStatus, checkinTime) {
   const [result] = await pool.query(`
     UPDATE CHECKINS 
@@ -93,5 +130,6 @@ async function updateCheckin(checkinId, eventId, invitationId, scannedBy, scanSt
   return result.insertId;
 }
 
-module.exports = {initCheckinModel, createCheckin, getGuestsCheckIns, 
-  getCheckinByInvitationId, updateCheckin, getEventAndGuestInfoByGuestId};
+module.exports = {initCheckinModel, createCheckin, getGuestsCheckIns,
+  getCheckinByInvitationId, updateCheckin, getEventAndGuestInfoByGuestId,
+  getEventAndGuestInfoByGuestIds};

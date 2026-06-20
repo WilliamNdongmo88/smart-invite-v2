@@ -552,7 +552,7 @@ const getAllEvents = async (req, res, next) => {
         //console.log("guestConfirmedList:: ", guestConfirmedList);
         const pdfBuffer = await generateDualGuestListPdf(guestPresentList, guestConfirmedList, data);
         //console.log("pdfBuffer:: ", pdfBuffer);
-        console.log("### data:", data);
+        //console.log("### data:", data);
         if(data.notification_mode === 'email') await sendPdfByEmail(data, pdfBuffer);
         if(data.notification_mode === 'whatsapp') await sendPdfByWhatsapp(data, pdfBuffer);
     } catch (error) {
