@@ -297,7 +297,7 @@ async function getEventWithTotalGuestById(eventId) {
 async function updateEvent(eventId, organizerId, title, description, eventDate, banquetTime, 
                            religiousLocation, religiousTime, eventCivilLocation, eventLocation, 
                            maxGuests, hasPlusOne, footRestriction, showWeddingReligiousLocation,
-                           status, type, budget, eventNameConcerned1, eventNameConcerned2 ) {
+                           status, type, budget, eventNameConcerned1, eventNameConcerned2) {
 
     await pool.query(`UPDATE EVENTS SET organizer_id=?, title=?, description=?, event_date=?, 
             banquet_time=?, religious_location=?, religious_time=?,

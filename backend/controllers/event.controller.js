@@ -285,7 +285,8 @@ const getAllEvents = async (req, res, next) => {
   async function updateEventService(eventId, payload) {
     let { organizerId, title, description, eventDate, banquetTime, religiousLocation, religiousTime, 
             eventCivilLocation, eventLocation, maxGuests, hasPlusOne, footRestriction, 
-            showWeddingReligiousLocation, status, type, budget, eventNameConcerned1, eventNameConcerned2
+            showWeddingReligiousLocation, status, type, budget, eventNameConcerned1, eventNameConcerned2,
+            eventEndDate
         } = payload.eventDatas;
     
     const event = await getEventById(eventId);
@@ -323,7 +324,7 @@ const getAllEvents = async (req, res, next) => {
     await updateEvent(eventId, organizerId, title, description, eventDate, banquetTime,
         religiousLocation, religiousTime, eventCivilLocation, eventLocation, maxGuests, hasPlusOne, 
         footRestriction, showWeddingReligiousLocation, status, type, 
-        budget, eventNameConcerned1, eventNameConcerned2 );
+        budget, eventNameConcerned1, eventNameConcerned2);
     const updatedEvent = await getEventById(eventId);
     if(payload.eventInvitationNote != null){
         await updateEventInvitationNote(payload.eventInvitationNote);

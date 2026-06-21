@@ -31,4 +31,7 @@ router.put('/:paymentId/reject', authenticateToken, requireRole('admin'), Paymen
 // Admin — history
 router.get('/history', authenticateToken, requireRole('admin'), PaymentController.getAllPayments);
 
+// Admin — statistiques financières
+router.get('/stats', authenticateToken, requireRole('admin'), PaymentController.getFinancialStats);
+
 module.exports = router;

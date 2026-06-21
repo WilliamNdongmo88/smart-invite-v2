@@ -3,8 +3,9 @@ const {
   getAllPendingPayments, submitPaymentProof, setUnderReview,
   validatePayment, rejectPayment, isPaymentValidated,
   resetPaymentForNewQuota, deletePaymentProofFile,
-  getValidatedQuota, PRICE_PER_GUEST,getTotalSentInvitations,
-  getAllPayments: getAllPaymentsModel,updateStatusPayments
+  getValidatedQuota, PRICE_PER_GUEST, getTotalSentInvitations,
+  getAllPayments: getAllPaymentsModel, updateStatusPayments,
+  getFinancialStats: getFinancialStatsModel
 } = require('../models/payment');
 const { getEventById } = require('../models/events');
 const { getUserById } = require('../models/users');
@@ -236,6 +237,14 @@ const rejectEventPayment = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+// Admin — Statistiques financières
+const getFinancialStats = async (req, res, next) => {
+  try {
+    const stats = await getFinancialStatsModel();
+    return res.status(200).json(stats);
+  } catch (error) { next(error); }
+};
+
 module.exports = {
   calculateAmount,
   initEventPayment,
@@ -246,4 +255,5 @@ module.exports = {
   markUnderReview,
   validateEventPayment,
   rejectEventPayment,
+  getFinancialStats,
 };

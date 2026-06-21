@@ -208,6 +208,74 @@ async function getTotalSentInvitations(eventId) {
   return Number(rows[0].total_sent);
 }
 
+async function getFinancialStats() {
+  const now = new Date();
+  const currentYear  = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  // Une seule requête groupée par année et mois
+  const [rows] = await pool.query(`
+    SELECT
+      YEAR(validated_at)  AS year,
+      MONTH(validated_at) AS month,
+      COUNT(*)            AS payment_count,
+      SUM(amount)         AS revenue
+    FROM PAYMENTS
+    WHERE status = 'validated'
+      AND validated_at IS NOT NULL
+    GROUP BY YEAR(validated_at), MONTH(validated_at)
+    ORDER BY year ASC, month ASC
+  `);
+
+  // Totaux globaux
+  const [totals] = await pool.query(`
+    SELECT
+      COUNT(*)   AS total_payments,
+      SUM(amount) AS total_revenue
+    FROM PAYMENTS
+    WHERE status = 'validated'
+  `);
+
+  const totalRevenue   = Number(totals[0].total_revenue  || 0);
+  const totalPayments  = Number(totals[0].total_payments || 0);
+
+  // Agrégation par année
+  const byYear = {};
+  for (const row of rows) {
+    const y = row.year;
+    if (!byYear[y]) byYear[y] = { year: y, revenue: 0, payment_count: 0, months: [] };
+    byYear[y].revenue       += Number(row.revenue);
+    byYear[y].payment_count += Number(row.payment_count);
+    byYear[y].months.push({
+      month:         Number(row.month),
+      revenue:       Number(row.revenue),
+      payment_count: Number(row.payment_count)
+    });
+  }
+
+  // Revenus de l'année courante
+  const currentYearData  = byYear[currentYear] || { revenue: 0, payment_count: 0, months: [] };
+
+  // Revenus du mois courant
+  const currentMonthData = currentYearData.months.find(m => m.month === currentMonth)
+    || { revenue: 0, payment_count: 0 };
+
+  return {
+    total_revenue:          totalRevenue,
+    total_payments:         totalPayments,
+    current_year_revenue:   currentYearData.revenue,
+    current_month_revenue:  currentMonthData.revenue,
+    current_month_payments: currentMonthData.payment_count,
+    by_year:   Object.values(byYear),
+    by_month:  rows.map(r => ({
+      year:          Number(r.year),
+      month:         Number(r.month),
+      revenue:       Number(r.revenue),
+      payment_count: Number(r.payment_count)
+    }))
+  };
+}
+
 module.exports = {
   initPaymentModel,
   PRICE_PER_GUEST,
@@ -227,5 +295,6 @@ module.exports = {
   resetPaymentForNewQuota,
   deletePaymentProofFile,
   getValidatedQuota,
-  getTotalSentInvitations
+  getTotalSentInvitations,
+  getFinancialStats
 };
