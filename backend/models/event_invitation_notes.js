@@ -7,6 +7,8 @@ const initEventInvitationNotesModel = async () => {
       event_id INT UNSIGNED NOT NULL,
       title VARCHAR(255),
       main_message TEXT,
+      mainMessage_part1 TEXT, 
+      mainMessage_part2 TEXT,
       sous_main_message TEXT,
       event_theme VARCHAR(255),
       priority_colors VARCHAR(255),
@@ -29,13 +31,15 @@ const initEventInvitationNotesModel = async () => {
   console.log('✅ Table EVENT_INVITATION_NOTES prête !');
 };
 
-async function creatEventInvitNote(eventId, title, mainMessage, sousMainMessage, eventTheme, 
+async function creatEventInvitNote(eventId, title, mainMessage, mainMessagePart1, mainMessagePart2, sousMainMessage, eventTheme, 
   priorityColors, qrInstructions, dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
   topBandColor, bottomBandColor, textColor, pdfUrl, hasInvitationModelCard, code, logoUrl, heartIconUrl) {
   const [result] = await pool.query(`
       INSERT INTO EVENT_INVITATION_NOTES (event_id,
                                           title,
                                           main_message,
+                                          mainMessage_part1, 
+                                          mainMessage_part2,
                                           sous_main_message,
                                           event_theme,
                                           priority_colors,
@@ -53,8 +57,8 @@ async function creatEventInvitNote(eventId, title, mainMessage, sousMainMessage,
                                           logo_url,
                                           heart_icon_url
                                           )
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-  `,[eventId, title, mainMessage, sousMainMessage, eventTheme, 
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+  `,[eventId, title, mainMessage, mainMessagePart1, mainMessagePart2, sousMainMessage, eventTheme, 
   priorityColors, qrInstructions, dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
   topBandColor, bottomBandColor, textColor, pdfUrl, hasInvitationModelCard, code, logoUrl, heartIconUrl]);
 
@@ -93,7 +97,7 @@ async function updateCodeEventInvNote(id, eventId, code) {
   return result.insertId;
 }
 
-async function updateEventInvitNote(id, eventId, title, mainMessage, sousMainMessage, eventTheme, 
+async function updateEventInvitNote(id, eventId, title, mainMessage, mainMessagePart1, mainMessagePart2, sousMainMessage, eventTheme, 
   priorityColors, qrInstructions, dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
   topBandColor, bottomBandColor, textColor, pdfUrl, hasInvitationModelCard, code, logoUrl, heartIconUrl) {
 
@@ -102,6 +106,8 @@ async function updateEventInvitNote(id, eventId, title, mainMessage, sousMainMes
     SET event_id=?,
         title=?,
         main_message=?,
+        mainMessage_part1=?, 
+        mainMessage_part2=?,
         sous_main_message=?,
         event_theme=?,
         priority_colors=?,
@@ -119,7 +125,7 @@ async function updateEventInvitNote(id, eventId, title, mainMessage, sousMainMes
         logo_url=?,
         heart_icon_url=?
     WHERE id=?
-  `, [eventId, title, mainMessage, sousMainMessage, eventTheme, 
+  `, [eventId, title, mainMessage, mainMessagePart1, mainMessagePart2, sousMainMessage, eventTheme, 
   priorityColors, qrInstructions, dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
   topBandColor, bottomBandColor, textColor, pdfUrl, hasInvitationModelCard, code, logoUrl, heartIconUrl, id]);
 

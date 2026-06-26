@@ -25,7 +25,8 @@ const { getLinkByToken, updateLink, updateLinkUsedCount } = require('../models/l
 const { getEventInvitNote } = require('../models/event_invitation_notes');
 const { getAllUsers } = require('./feedback.controller');
 const { whatsappInvitationToGuest, sendFileQRCodeWhatsapp, 
-        sendReminderWhatsapp, whatsappGuestResponseToOrganizer } = require('../services/whatsapp.service');
+        sendReminderWhatsapp, whatsappGuestResponseToOrganizer,
+        sendWhatsappPdfToGuest } = require('../services/whatsapp.service');
 const { isPaymentValidated, incrementSentInvitations } = require('../models/payment');
 
 const addGuest = async (req, res, next) => {
@@ -322,7 +323,7 @@ const addGuestFromLink = async (req, res, next) => {
         =========================================
         */
         const guestId = await createGuestFromLink(
-            eventId, fullName, email, phoneNumber, rsvpStatus, guestHasPlusOneAutoriseByAdmin,
+            eventId, fullName, email, phoneNumber, notificationMode, rsvpStatus, guestHasPlusOneAutoriseByAdmin,
             dietaryRestrictions, plusOneNameDietRestr, hasPlusOne, plusOneName
         );
 

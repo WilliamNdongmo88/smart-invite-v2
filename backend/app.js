@@ -24,7 +24,8 @@ const setupSwagger = require('./docs/swagger');
 const { createDefaultTableMaintenance } = require('./models/maintenance');
 const { getUserByEvtId } = require('./models/events');
 const { sendScheduledReport } = require('./controllers/event.controller');
-const { isPaymentValidated, incrementSentInvitations } = require('./models/payment')
+const { isPaymentValidated, incrementSentInvitations } = require('./models/payment');
+const { getAllConfirmedGuest } = require('./controllers/guest.controller');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

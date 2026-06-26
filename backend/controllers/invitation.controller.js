@@ -387,7 +387,8 @@ const viewQrCode = async (req, res, next) => {
             'wedding':     'carte.jpg',
             'engagement':  'carte-fiancailles.png',
             'anniversary': 'carte-anniv-mariage.png',
-            'birthday':    'carte-anniv.png'
+            'birthday':    'carte-anniv.png',
+            'other':    'card-pro.png'
         };
 
         let eventType = null;

@@ -63,7 +63,7 @@ async function createGuest(
 }
 
 async function createGuestFromLink(
-    eventId,fullName,email,phoneNumber,rsvpStatus,guestHasPlusOneAutoriseByAdmin,
+    eventId,fullName,email,phoneNumber,notificationMode, rsvpStatus,guestHasPlusOneAutoriseByAdmin,
     dietaryRestrictions,plusOneNameDietRestr,hasPlusOne,plusOneName
 ) {
 
@@ -82,10 +82,10 @@ async function createGuestFromLink(
             has_plus_one,
             plus_one_name
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
         `,
         [
-            eventId,fullName,email,phoneNumber,rsvpStatus,guestHasPlusOneAutoriseByAdmin,
+            eventId,fullName,email,phoneNumber,notificationMode, rsvpStatus,guestHasPlusOneAutoriseByAdmin,
             dietaryRestrictions,plusOneNameDietRestr,hasPlusOne,plusOneName
         ]
     );

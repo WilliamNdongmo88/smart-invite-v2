@@ -62,21 +62,21 @@ client.on('loading_screen', (percent, message) => {
     console.log('⏳ Chargement :', percent, message);
 });
 
-client.on('disconnected', async (reason) => {
+// client.on('disconnected', async (reason) => {
 
-    console.error('❌ WhatsApp déconnecté :', reason);
+//     console.error('❌ WhatsApp déconnecté :', reason);
 
-    isReady = false;
+//     isReady = false;
 
-    //console.log('Tentative de reconnexion...');
+//     //console.log('Tentative de reconnexion...');
 
-    try {
-        await client.initialize();
-    } catch (error) {
+//     try {
+//         await client.initialize();
+//     } catch (error) {
 
-        console.error('Erreur reconnexion :', error);
-    }
-});
+//         console.error('Erreur reconnexion :', error);
+//     }
+// });
 
 client.on('auth_failure', (msg) => {
     console.error('Erreur authentification ❌');
@@ -92,6 +92,7 @@ client.on( 'message', (message) => handleRsvp(client, message) );
 /**
  * Initialisation
  */
+console.log('🚀 Initialisation WhatsApp');
 client.initialize();
 
 /**

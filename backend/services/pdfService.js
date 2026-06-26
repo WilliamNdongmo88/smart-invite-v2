@@ -5,319 +5,309 @@ const { getEventInvitNote, updateCodeEventInvNote } = require('../models/event_i
 require('pdfkit-table');
 
 async function generateGuestPdf(data, card = null, plusOneName = null) {
-  //console.log("[generateGuestPdf] Card", card);
-  const guest = data;
-  const event = data;
-  
-  const eventDate = new Date((event.event_date || event.eventDate)).toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const guest = data || {};
+  const event = data || {};
 
-  const time = new Date((event.event_date || event.eventDate)).toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const value = (...keys) => {
+    for (const key of keys) {
+      const current = key.split('.').reduce((acc, part) => acc?.[part], { event, guest, card });
+      if (current !== undefined && current !== null && current !== '') return current;
+    }
+    return '';
+  };
 
-  const banquetTime = (event.banquet_time || event.banquetTime)?.replace(':00', '');
-  const religiousTime = (event.religious_time || event.religiousTime)?.replace(':00', '');
+  const cleanTime = (timeValue) => {
+    if (!timeValue) return '';
+    if (timeValue instanceof Date) {
+      return timeValue.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+    return String(timeValue).replace(/:00$/, '');
+  };
+
+  const eventDateValue = value('event.event_date', 'event.eventDate');
+  const parsedDate = eventDateValue ? new Date(eventDateValue) : null;
+  const isValidDate = parsedDate && !Number.isNaN(parsedDate.getTime());
+
+  const eventDate = isValidDate
+    ? parsedDate.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : '';
+
+  const eventTime = isValidDate
+    ? parsedDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    : cleanTime(value('event.event_time', 'event.eventTime'));
+
+  const eventType = value('event.type') || 'wedding';
+  const guestName = value('guest.full_name', 'guest.name', 'guest.guestName') || 'invite';
+  const companionName = value('guest.plus_one_name', 'guest.plusOneName') || plusOneName;
+
+  const titleColor = value('card.title_color') || '#b58b63';
+  const textColor = value('card.text_color') || '#444444';
+  const topBandColor = value('card.top_band_color') || '#0055A4';
+  const bottomBandColor = value('card.bottom_band_color') || '#EF4135';
+
+  const title = value('card.title') || "LETTRE D'INVITATION";
+  const mainMessage = value('card.main_message') || value('event.description') || '';
+  const mainMessagePart1 = value('card.mainMessage_part1') || mainMessage;
+  const mainMessagePart2 = value('card.mainMessage_part2');
+  const eventTitle = value('event.eventTitle', 'event.title') || 'cet evenement';
+
+  const banquetTime = cleanTime(value('event.banquet_time', 'event.banquetTime'));
+  const religiousTime = cleanTime(value('event.religious_time', 'event.religiousTime'));
+  const civilLocation = value('event.event_civil_location', 'event.eventCivilLocation');
+  const eventLocation = value('event.event_location', 'event.eventLocation');
+  const religiousLocation = value('event.religious_location', 'event.religiousLocation');
+  const showReligiousCeremony = Boolean(
+    value('event.show_wedding_religious_location', 'event.showWeddingReligiousLocation')
+  );
+
+  const nameConcerned1 = value('event.event_name_concerned1', 'event.eventNameConcerned1');
+  const nameConcerned2 = value('event.event_name_concerned2', 'event.eventNameConcerned2');
+
+  const programsByType = {
+    wedding: [
+      {
+        title: 'MARIAGE CIVIL',
+        time: eventTime,
+        location: civilLocation,
+        description: value('card.sous_main_message'),
+      },
+      {
+        title: 'CEREMONIE RELIGIEUSE',
+        time: religiousTime,
+        location: religiousLocation,
+        condition: showReligiousCeremony,
+      },
+      {
+        title: 'RECEPTION NUPTIALE',
+        time: banquetTime,
+        location: eventLocation,
+      },
+    ],
+    engagement: [
+      {
+        title: 'CEREMONIE DE FIANCAILLES',
+        time: eventTime,
+        location: eventLocation,
+      },
+      {
+        description: value('card.sous_main_message'),
+      },
+    ],
+    anniversary: [
+      {
+        title: 'CEREMONIE COMMEMORATIVE',
+        time: eventTime,
+        location: eventLocation,
+      },
+      {
+        description: value('card.sous_main_message'),
+      },
+    ],
+    birthday: [
+      {
+        title: 'ACCUEIL DES INVITES',
+        time: eventTime,
+        location: eventLocation,
+      },
+      {
+        title: "CELEBRATION D'ANNIVERSAIRE",
+        description: value('card.sous_main_message'),
+      },
+    ],
+    other: [
+      {
+        title: 'OUVERTURE ET ACCUEIL',
+        time: eventTime,
+        location: eventLocation,
+      },
+      {
+        title: "DEROULEMENT DE L'EVENEMENT",
+        description: value('card.sous_main_message'),
+      },
+    ],
+  };
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
-      size: "A5",
-      margins: { top: 25, bottom: 25, left: 40, right: 40 } // Marges légèrement réduites
+      size: 'A5',
+      margins: { top: 25, bottom: 25, left: 40, right: 40 },
     });
 
     const chunks = [];
-    doc.on("data", c => chunks.push(c));
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-    doc.on("error", reject);
+    doc.on('data', chunk => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
 
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
+    const contentX = 38;
     const contentWidth = pageWidth - 80;
-    let y = 30; // Départ un peu plus haut
+    const bottomSafeY = pageHeight - 45;
+    let y = 30;
 
-    /* 🎨 Fond */
-    doc.save().rect(0, 0, pageWidth, 25).fill(`${card.top_band_color}`).restore();//"#0055A4"
-    doc.save().rect(0, pageHeight - 25, pageWidth, 25).fill(`${card.bottom_band_color}`).restore();//"#EF4135"
-    doc.save().opacity(0.04).rect(0, 0, pageWidth, pageHeight).fill("#FFFFFF").restore();
+    const ensureSpace = (needed = 40) => {
+      if (y + needed < bottomSafeY) return;
+      doc.addPage();
+      y = 30;
+      doc.save().rect(0, 0, pageWidth, 25).fill(topBandColor).restore();
+      doc.save().rect(0, pageHeight - 25, pageWidth, 25).fill(bottomBandColor).restore();
+    };
 
-    /* 💍 Icône */
-    const imgSize = 75; // Réduit de 65 à 60
-    doc.image(path.join(__dirname, "../assets/icons/logo.png"), pageWidth / 2 - imgSize / 2, y, { width: imgSize });
-    y += imgSize - 5; // 🎯 Réduction de l'espace entre l'image et le titre
+    const writeText = (text, options = {}) => {
+      if (!text) return;
+      const {
+        font = 'Helvetica',
+        size = 10,
+        color = textColor,
+        align = 'center',
+        lineGap = 1.2,
+        underline = false,
+        after = 10,
+      } = options;
 
-    /* 💕 Titre */
-    doc
-    .fillColor("#b58b63")
-    .font("Times-BoldItalic")
-    .fontSize(18) // Réduit de 19 à 18
-    .text(card.title.toUpperCase(), 38, y, { 
-      width: contentWidth, 
-      align: "center",
-      underline: true 
-    });
-    y += 30; // Réduit de 30 à 25
+      ensureSpace(doc.heightOfString(String(text), { width: contentWidth, lineGap }) + after);
+      doc.font(font).fontSize(size).fillColor(color).text(String(text), contentX, y, {
+        width: contentWidth,
+        align,
+        lineGap,
+        underline,
+      });
+      y = doc.y + after;
+    };
 
-    /* Sous-titre */
-    doc.fillColor("#444").font("Times-BoldItalic").fontSize(11).text( // Réduit de 11.5 à 11
-      (guest.plus_one_name || plusOneName)
-        ? `Cher/Chère ${guest.full_name} et ${(guest.plus_one_name || plusOneName)}`
-        : `Cher/Chère ${guest.full_name},`,
-      38, y, { width: contentWidth, align: "center" }
-    );
-    y += 20; // Réduit de 20 à 18
+    doc.save().rect(0, 0, pageWidth, 25).fill(topBandColor).restore();
+    doc.save().rect(0, pageHeight - 25, pageWidth, 25).fill(bottomBandColor).restore();
+    doc.save().opacity(0.04).rect(0, 0, pageWidth, pageHeight).fill('#FFFFFF').restore();
 
-    /* 📝 Texte principal */
-    doc.font("Helvetica").fontSize(10).fillColor("#444").text( // Réduit de 10.5 à 10
-      `${card.main_message}`,
-      38, y, { width: contentWidth, align: "center", lineGap: 1.5 } // lineGap réduit de 2 à 1.5
-    );
-    
-    const mainTextHeight = doc.heightOfString(
-      `${card.main_message}`,
-      { width: contentWidth, lineGap: 1.5 }
-    );
-    y += mainTextHeight + 15; // Réduit de 15 à 12
+    const logoPath = path.join(__dirname, '../assets/icons/logo.png');
+    const imgSize = 75;
+    doc.image(logoPath, pageWidth / 2 - imgSize / 2, y, { width: imgSize });
+    y += imgSize - 5;
 
-    /* 📅 Programme */
-    doc
-      .fontSize(12) // Réduit de 12.5 à 12
-      .fillColor("#444")
-      .font("Times-BoldItalic")  
-      .text("PROGRAMME DE LA JOURNÉE", 38, y, { width: contentWidth, align: "center" });
-    y += 18; // Réduit de 20 à 18
-
-    const programText1 = `MARIAGE CIVIL LE ${eventDate} A ${time}\n${(event.event_civil_location || event.eventCivilLocation)}
-    \n${card.sous_main_message}`;
-    doc.font("Helvetica").fontSize(10).text(programText1, 38, y, { width: contentWidth, align: "center", lineGap: 1.2 }); // fontSize 10.5 -> 10
-    
-    const programHeight1 = doc.heightOfString(programText1, { width: contentWidth, lineGap: 1.2 });
-    y += programHeight1 + 10; // Réduit de 10 à 8
-
-    if(event.showWeddingReligiousLocation){
-      const programText2 = `Cérémonie Religieuse ${religiousTime}\n${(event.religious_location || event.religiousLocation)}`;
-      doc.text(programText2, 38, y, { width: contentWidth, align: "center", lineGap: 1.2 });
-      
-      const programHeight2 = doc.heightOfString(programText2, { width: contentWidth, lineGap: 1.2 });
-      y += programHeight2 + 15; // Réduit de 15 à 12
-    }
-
-    const programText3 = `Reception nuptial le même jour a partir de ${banquetTime} précisement à\n${(event.event_location || event.eventLocation)}`;
-    doc.text(programText3, 38, y, { width: contentWidth, align: "center", lineGap: 1.2 });
-    
-    const programHeight3 = doc.heightOfString(programText3, { width: contentWidth, lineGap: 1.2 });
-    y += programHeight3 + 15; // Réduit de 15 à 12
-
-    /* ✨ Thème & Couleurs */
-    doc
-      .fontSize(11) // Réduit de 11.5 à 11
-      .font("Times-BoldItalic") 
-      .text(`THEME DE LA SOIRÉE : ${card.event_theme}`, 38, y, { width: contentWidth, align: "center" });
-    y += 16; // Réduit de 18 à 16
-
-    doc.font("Helvetica").fontSize(10).text("Couleurs priorisées", 38, y, { width: contentWidth, align: "center" });
-    y += 20; // Réduit de 20 à 18
-    doc.font("Helvetica").fontSize(10).font("Times-BoldItalic") .text(`${card.priority_colors}`, 38, y, { width: contentWidth, align: "center" });
-    y += 20; // Réduit de 20 à 18
-
-    /* Consignes QR */
-    const qrText = `${card.qr_instructions}`;
-    doc.font("Helvetica").fontSize(9.5).fillColor("#444").text(qrText, 38, y, { width: contentWidth, align: "center", lineGap: 1.2 }); // fontSize 10 -> 9.5
-    
-    const qrHeight = doc.heightOfString(qrText, { width: contentWidth, lineGap: 1.2 });
-    y += qrHeight + 10; // Réduit de 10 à 8
-
-    /* Remerciements */
-    const thanksText = `${card.dress_code_message}`;
-    doc.font("Helvetica-Oblique").fontSize(9.5).fillColor("#666").text(thanksText, 38, y, { width: contentWidth, align: "center", lineGap: 1.2 });
-    y += 18; // Réduit de 20 à 14
-
-    const thanksText2 = `${card.thanks_message1}`;
-    doc.font("Helvetica-Oblique").fontSize(9.5).fillColor("#666").text(thanksText2, 38, y, { width: contentWidth, align: "center", lineGap: 1.2 });
-    y += 18; // Réduit de 20 à 14
-
-    const thanksText3 = `${card.closing_message}`;
-    doc.font("Helvetica-Oblique").fontSize(9.5).fillColor("#666").text(thanksText3, 38, y, { width: contentWidth, align: "center", lineGap: 1.2 });
-    
-    /* 🤍 Signature et ❤️ Cœur */
-    const thanksText3Height = doc.heightOfString(thanksText3, { width: contentWidth, lineGap: 1.2 });
-    const endOfTextY = y + thanksText3Height + 8;
-    
-    // On remonte un peu la signature pour laisser de la place au cœur au-dessus du rectangle rouge
-    let signatureY = pageHeight - 80; 
-    
-    if (endOfTextY > signatureY) {
-        signatureY = endOfTextY;
-    }
-
-    doc
-      .font("Times-BoldItalic") 
-      .fontSize(13) // Réduit de 14 à 13
-      .fillColor(`${card.title_color}`)
-      .text(`${event.event_name_concerned1} & ${event.event_name_concerned2}`, 38, signatureY,{ width: contentWidth, align: "center", underline: true });
-    
-    const heartSize = 14; // Réduit de 16 à 14
-    // Positionnement du cœur avec un petit décalage pour qu'il soit bien visible
-    doc.image(path.join(__dirname, "../assets/icons/heart.png"), pageWidth / 2 - heartSize / 2, signatureY + 18, { width: heartSize });
-
-    doc.end();
-  });
-}
-
-async function generateGuestPdfs(data, plusOneName = null) {
-  const guest = data;
-  const event = data;
-
-  const eventDate = new Date((event.event_date || event.eventDate)).toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  const time = new Date((event.event_date || event.eventDate)).toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
-  const banquetTime = (event.banquet_time || event.banquetTime)?.replace(':00', '');
-  const religiousTime = (event.religious_time || event.religiousTime)?.replace(':00', '');
-
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({
-      size: "A5",
-      margins: { top: 30, bottom: 30, left: 40, right: 40 }
+    writeText(String(title).toUpperCase(), {
+      font: 'Times-BoldItalic',
+      size: 18,
+      color: titleColor,
+      underline: true,
+      after: 18,
     });
 
-    const chunks = [];
-    doc.on("data", c => chunks.push(c));
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-    doc.on("error", reject);
-
-    const pageWidth = doc.page.width;
-    const pageHeight = doc.page.height;
-    const contentWidth = pageWidth - 80;
-    let y = 35; 
-
-    /* 🎨 Fond */
-    doc.save().rect(0, 0, pageWidth, 25).fill(card.top_band_color).restore();
-    doc.save().rect(0, pageHeight - 25, pageWidth, 25).fill(card.bottom_band_color).restore();
-    doc.save().opacity(0.04).rect(0, 0, pageWidth, pageHeight).fill("#FFFFFF").restore();
-
-    /* 💍 Icône */
-    const imgSize = 65;
-    doc.image(path.join(__dirname, "../assets/icons/logo.png"), pageWidth / 2 - imgSize / 2, y, { width: imgSize });
-    y += imgSize; // 🎯 Réduction de la marge entre l'image et le titre
-
-    /* 💕 Titre */
-    doc
-    .fillColor("#b58b63")
-    .font("Times-BoldItalic")  // ✅ Gras + Italique
-    .fontSize(19)
-    .text("LETTRE D'INVITATION", 38, y, { 
-      width: contentWidth, 
-      align: "center",
-      underline: true  // ✅ Souligné
-    });
-    y += 30;
-
-    /* Sous-titre .font("Helvetica-Oblique") */
-    doc.fillColor("#444").font("Times-BoldItalic").fontSize(11.5).text(
-      (guest.plus_one_name || plusOneName)
-        ? `Cher/Chère ${guest.full_name} et ${(guest.plus_one_name || plusOneName)}`
-        : `Cher/Chère ${guest.full_name},`,
-      38, y, { width: contentWidth, align: "center" }
+    writeText(
+      companionName
+        ? `Cher/Chere ${guestName} et ${companionName},`
+        : `Cher/Chere ${guestName},`,
+      {
+        font: 'Times-BoldItalic',
+        size: 11,
+        color: textColor,
+        after: 12,
+      }
     );
-    y += 20;
 
-    /* 📝 Texte principal */
-    doc.font("Helvetica").fontSize(10.5).fillColor("#444").text(
-      `C'est avec un immense bonheur que nous vous invitons à l'occasion de notre union que nous célebrerons entourés de nos familles, amis et connaissances dans la ville de BANGANGTE plus précisement à la Mairie.`,
-      38, y, { width: contentWidth, align: "center", lineGap: 2 }
-    );
-    
-    // 🎯 Calcul dynamique de la hauteur du texte pour éviter le chevauchement
-    const mainTextHeight = doc.heightOfString(
-      `C'est avec un immense bonheur que nous vous invitons à l'occasion de notre union que nous célebrerons entourés de nos familles, amis et connaissances dans la ville de BANGANGTE plus précisement à la Mairie.`,
-      { width: contentWidth, lineGap: 2 }
-    );
-    y += mainTextHeight + 15; // Ajout d'un espace de sécurité
-
-    /* 📅 Programme */
-    doc
-      //.font("Helvetica-Bold")
-      .fontSize(12.5)
-      .fillColor("#444")
-      .font("Times-BoldItalic")  
-      .text("PROGRAMME DE LA JOURNÉE", 38, y, { width: contentWidth, align: "center" });
-    y += 20;
-
-    const programText1 = `MARIAGE CIVIL LE ${eventDate} A ${time}\n${(event.event_civil_location || event.eventCivilLocation)} \nMini réception à la sortie de la mairie directement après la célebration de l'union par Mr le Maire.`;
-    doc.font("Helvetica").fontSize(10.5).text(programText1, 38, y, { width: contentWidth, align: "center", lineGap: 1.5 });
-    
-    const programHeight1 = doc.heightOfString(programText1, { width: contentWidth, lineGap: 1.5 });
-    y += programHeight1 + 10;
-
-    if(event.show_wedding_religious_location){
-      const programText2 = `Cérémonie Religieuse ${religiousTime}\n${(event.religious_location || event.religiousLocation)}`;
-      doc.text(programText2, 38, y, { width: contentWidth, align: "center", lineGap: 1.5 });
-      
-      const programHeight2 = doc.heightOfString(programText2, { width: contentWidth, lineGap: 1.5 });
-      y += programHeight2 + 15;
+    if (eventType === 'other') {
+      writeText(mainMessagePart1, { after: 5 });
+      writeText(eventTitle, {
+        font: 'Helvetica-Bold',
+        size: 10.5,
+        color: titleColor,
+        after: 5,
+      });
+      writeText(mainMessagePart2, { after: 15 });
+    } else {
+      writeText(mainMessage, { after: 15 });
     }
 
-    const programText3 = `Reception nuptial le même jour a partir de ${banquetTime} précisement à\n${(event.event_location || event.eventLocation)}`;
-    doc.text(programText3, 38, y, { width: contentWidth, align: "center", lineGap: 1.5 });
-    
-    const programHeight3 = doc.heightOfString(programText3, { width: contentWidth, lineGap: 1.5 });
-    y += programHeight3 + 15;
+    writeText('PROGRAMME', {
+      font: 'Times-BoldItalic',
+      size: 12,
+      color: textColor,
+      after: 10,
+    });
 
-    /* ✨ Thème & Couleurs */
+    const programItems = programsByType[eventType] || programsByType.other;
+    programItems
+      .filter(item => item.condition !== false)
+      .forEach(item => {
+        if (item.title) {
+          const datePart = eventDate ? ` LE ${eventDate.toUpperCase()}` : '';
+          const timePart = item.time ? ` A ${item.time}` : '';
+          writeText(`${item.title}${datePart}${timePart}`, { after: 3 });
+        }
+        if (item.location) {
+          writeText(item.location, {
+            font: 'Helvetica-Bold',
+            size: 10.5,
+            color: titleColor,
+            after: 3,
+          });
+        }
+        if (item.description) writeText(item.description, { after: 8 });
+      });
+
+    if (eventType !== 'other') {
+      const theme = value('card.event_theme');
+      const colors = value('card.priority_colors');
+
+      if (theme) {
+        writeText(`THEME DE LA SOIREE : ${theme}`, {
+          font: 'Times-BoldItalic',
+          size: 11,
+          after: 8,
+        });
+      }
+
+      if (colors) {
+        writeText('Couleurs priorisees', { after: 4 });
+        writeText(colors, {
+          font: 'Times-BoldItalic',
+          after: 10,
+        });
+      }
+    }
+
+    writeText(value('card.qr_instructions'), { size: 9.5, after: 8 });
+    writeText(value('card.dress_code_message'), {
+      font: 'Helvetica-Oblique',
+      size: 9.5,
+      color: '#666666',
+      after: 8,
+    });
+    writeText(value('card.thanks_message1'), {
+      font: 'Helvetica-Oblique',
+      size: 9.5,
+      color: '#666666',
+      after: 8,
+    });
+    writeText(value('card.closing_message'), {
+      font: 'Helvetica-Oblique',
+      size: 9.5,
+      color: '#666666',
+      after: 8,
+    });
+
+    const signature = eventType === 'other' || eventType === 'birthday'
+      ? nameConcerned1
+      : [nameConcerned1, nameConcerned2].filter(Boolean).join(' & ');
+
+    const signatureY = Math.max(y, pageHeight - 85);
     doc
-      .fontSize(11.5)
-      .font("Times-BoldItalic") 
-      .text("THEME DE LA SOIRÉE : CHIC ET GLAMOUR", 38, y, { width: contentWidth, align: "center" });
-    y += 18;
+      .font('Times-BoldItalic')
+      .fontSize(13)
+      .fillColor(titleColor)
+      .text(signature || eventTitle, contentX, signatureY, {
+        width: contentWidth,
+        align: 'center',
+        underline: true,
+      });
 
-    doc.font("Helvetica").fontSize(10.5).text("Couleurs priorisées", 38, y, { width: contentWidth, align: "center" });
-    y += 20;
-    doc.font("Helvetica").fontSize(10.5).font("Times-BoldItalic") .text("Bleu, Blanc, Rouge, (NOIR: couleur universelle).", 38, y, { width: contentWidth, align: "center" });
-    y += 20;
-
-    /* Consignes QR */
-    const qrText = "Prière de vous présenter uniquement avec votre code QR et votre billet numérique (à partir de votre téléphone) transféré par votre émetteur via les applications mobiles de votre choix (WhatsApp, SMS, e-mail) le jour de la soirée.";
-    doc.font("Helvetica").fontSize(10).fillColor("#444").text(qrText, 38, y, { width: contentWidth, align: "center", lineGap: 1.5 });
-    
-    const qrHeight = doc.heightOfString(qrText, { width: contentWidth, lineGap: 1.5 });
-    y += qrHeight + 10;
-
-    /* Remerciements */
-    const thanksText = `Merci de respecter les couleurs vestimentaires choisies.`;
-    doc.font("Helvetica-Oblique").fontSize(10).fillColor("#666").text(thanksText, 38, y, { width: contentWidth, align: "center", lineGap: 1.5 });
-    y += 20;
-
-    const thanksText2 = "Merci pour votre compréhension.";
-    doc.font("Helvetica-Oblique").fontSize(10).fillColor("#666").text(thanksText2, 38, y, { width: contentWidth, align: "center", lineGap: 1.5 });
-    y += 20;
-
-    const thanksText3 = "Votre présence illuminera ce jour si spécial pour nous.";
-    doc.font("Helvetica-Oblique").fontSize(10).fillColor("#666").text(thanksText3, 38, y, { width: contentWidth, align: "center", lineGap: 1.5 });
-    // y += thanksText3 + 50;
-
-    /* 🤍 Signature et ❤️ Cœur (Positionnement fixe en bas) */
-    const signatureY = pageHeight - 65; // 🎯 Positionnement fixe par rapport au bas de la page
-    doc
-      .font("Times-BoldItalic") 
-      .fontSize(14)
-      .fillColor("#b58b63")
-      .text(`${event.event_name_concerned1} & ${event.event_name_concerned2}`, 38, signatureY,{ width: contentWidth, align: "center", underline: true });
-    
-    const heartSize = 16;
-    doc.image(path.join(__dirname, "../assets/icons/heart.png"), pageWidth / 2 - heartSize / 2, signatureY + 20, { width: heartSize });
+    const heartPath = path.join(__dirname, '../assets/icons/heart.png');
+    const heartSize = 14;
+    doc.image(heartPath, pageWidth / 2 - heartSize / 2, signatureY + 18, { width: heartSize });
 
     doc.end();
   });
@@ -714,37 +704,6 @@ async function uploadPdfToFirebase(guest, pdfBuffer, event = null) {
   return data;
 }
 
-// async function uploadPaymentProofFileToFirebase(paymentFile, user) {
-//   const bucket = admin.storage().bucket();
-//   let code = ''
-//   if(user) code = generateRandom4Digits();
-//   //console.log('code:', code);
-//   //console.log('paymentFile:', paymentFile);
-
-//   const fileType = String(paymentFile.mimetype).split('/')[1];
-  
-//   let fileName = null;
-//   if (process.env.NODE_ENV == 'development'){
-//     if(user) fileName = `dev/payment/proof_user_${user.id}_${code}.${fileType}`;
-//   }else if(process.env.NODE_ENV == 'production'){
-//     if(user) fileName = `prod/payment/proof_user_${user.id}_${code}.${fileType}`;
-//   }
-  
-//   const file = bucket.file(fileName);
-
-//   await file.save(paymentFile.buffer, { contentType: paymentFile.minetype });
-//   const [url] = await file.getSignedUrl({
-//     action: 'read',
-//     expires: '03-01-2030',
-//   });
-
-//   const data = {
-//     url: url,
-//     code: code
-//   }
-//   return data;
-// }
-
 function generateRandom4Digits() {
     return Math.floor(1000 + Math.random() * 9000);
 }
@@ -782,7 +741,6 @@ module.exports = { generateGuestPdf,
                    uploadPdfToFirebase, 
                    generatePresentGuestsPdf, 
                    generateDualGuestListPdf,
-                   //uploadPaymentProofFileToFirebase, 
                    uploadPaymentProofToFirebase, 
                    deletePaymentProofFromFirebase
                  };

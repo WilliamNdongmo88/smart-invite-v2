@@ -52,9 +52,9 @@ const createEventWithFile = async (req, res, next) => {
         const data = await uploadPdfToFirebase(null, invitationFile.buffer, event[0]);
         // //console.log('Fichier uploadé avec succès sur Firebase. URL publique :', publicUrl);
         const pdfUrl = data.url;
-        await creatEventInvitNote(event[0].id, null, null, null, null, null, null, 
-                null, null, null, null, 
-                null, null, null, pdfUrl, true, data.code, null, null);
+
+        await creatEventInvitNote(event[0].id, null,null, null, null, null, null, null, null, null, 
+                null, null, null, null, null, null, pdfUrl, true, data.code, null, null);
 
         res.status(200).json({
             message: 'Fichier uploadé avec succès sur Firebase !',
@@ -96,13 +96,13 @@ const createEventService = async (datas) => {
                 showWeddingReligiousLocation, status});
             
             if(eventInvitationNote != null || eventInvitationNote != undefined){
-                const {invTitle, mainMessage, sousMainMessage, eventTheme, priorityColors, qrInstructions, 
+                const {invTitle, mainMessage, mainMessagePart1, mainMessagePart2, sousMainMessage, eventTheme, priorityColors, qrInstructions, 
                        dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
                        topBandColor, bottomBandColor, textColor, logoUrl, heartIconUrl
                 } = eventInvitationNote;
-                await creatEventInvitNote(eventId, invTitle, mainMessage, sousMainMessage, eventTheme, priorityColors, qrInstructions, 
-                   dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
-                   topBandColor, bottomBandColor, textColor, null, false, logoUrl, heartIconUrl);
+                await creatEventInvitNote(eventId, invTitle, mainMessage, mainMessagePart1, mainMessagePart2, sousMainMessage, eventTheme, priorityColors, qrInstructions, 
+                                   dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
+                                   topBandColor, bottomBandColor, textColor, null, false, null, logoUrl, heartIconUrl);
             }
 
             // Planification (Sensé s'exécuter le lendemain du jour de l'événement)
@@ -351,7 +351,7 @@ const getAllEvents = async (req, res, next) => {
   async function updateEventInvitationNote(eventInvitationNote) {
     //console.log('[updateEventInvitationNote] eventInvitationNote: ', eventInvitationNote);
     try {
-        let {eventId, invTitle, mainMessage, sousMainMessage, eventTheme, priorityColors, 
+        let {eventId, invTitle, mainMessage, mainMessagePart1, mainMessagePart2, sousMainMessage, eventTheme, priorityColors, 
             qrInstructions, dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
             topBandColor, bottomBandColor, textColor, pdfUrl, hasInvitationModelCard, code, logoUrl, heartIconUrl
         } = eventInvitationNote;
@@ -363,6 +363,8 @@ const getAllEvents = async (req, res, next) => {
         if(eventId == null){ eventId = event.event_id};
         if(invTitle == null){ invTitle = event.title};
         if(mainMessage == null){ mainMessage = event.main_message};
+        if(mainMessagePart1 == null){ mainMessagePart1 = event.mainMessage_part1};
+        if(mainMessagePart2 == null){ mainMessagePart2 = event.mainMessage_part2};
         if(sousMainMessage == null){ sousMainMessage = event.sous_main_message};
         if(eventTheme == null){ eventTheme = event.event_theme};
         if(priorityColors == null){ priorityColors = event.priority_colors};
@@ -381,7 +383,7 @@ const getAllEvents = async (req, res, next) => {
         if(heartIconUrl == null){ heartIconUrl = event.heart_icon_url};
 
         //console.log('pdfUrl: ', pdfUrl);
-        await updateEventInvitNote(event.id, eventId, invTitle, mainMessage, sousMainMessage, eventTheme, priorityColors, 
+        await updateEventInvitNote(event.id, eventId, invTitle, mainMessage, mainMessagePart1, mainMessagePart2, sousMainMessage, eventTheme, priorityColors, 
             qrInstructions, dressCodeMessage, thanksMessage1, closingMessage, titleColor, 
             topBandColor, bottomBandColor, textColor, pdfUrl, hasInvitationModelCard, code, logoUrl, heartIconUrl);
     } catch (error) {

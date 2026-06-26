@@ -55,6 +55,18 @@ const getLinks = async (req, res, next) => {
     }
 }
 
+const getLink = async (req, res, next) => {
+    try {
+        const linkId = req.params.linkId;
+        const link = await getLinkById(linkId);
+        if(!link) return res.status(404).json({error: "Lien non trouvé !"});
+        return res.status(200).json(link);
+    } catch (error) {
+        console.error('[getLinks] Error:', error.message);
+        next(error);
+    }
+}
+
 const getUserRole = async (req, res, next) => {
     try {
       let msg = '';
@@ -120,4 +132,11 @@ const deleteLinks = async (req, res, next) => {
     }
 }
 
-module.exports = {addLink, getLinks, getImage, editLink, deleteLinks, getUserRole};
+module.exports = {
+  addLink, 
+  getLinks,
+  getLink,
+  getImage, 
+  editLink, 
+  deleteLinks, 
+  getUserRole};
