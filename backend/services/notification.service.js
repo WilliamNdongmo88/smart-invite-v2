@@ -53,6 +53,12 @@ async function sendGuestEmail(guest, event, token) {
         eventType = 'anniversaire de ' + concerned
         sentence = 'J\'ai le plaisir de vous inviter à célébrer mon anniversaire '
       break;
+    default:
+        concerned = event.event_name_concerned1;
+        article = 'à la';
+        eventType = concerned;
+        sentence = "J'ai le plaisir de vous inviter à participer à ";
+      break;
   }
   const sendSmtpEmail = {
     to: [{ email: guest.email, name: guest.full_name }],
@@ -214,6 +220,13 @@ async function sendInvitationToGuest(data, qrCodeUrl, pdfBuffer) {
           sentence = 'Je suis ravis que vous ayez accepté mon invitation.'
           signature = concerned
         break;
+      default:
+          concerned = event.event_name_concerned1
+          article ='à la '
+          eventType = 'événement professionnel'
+          sentence = 'Je suis ravis que vous ayez accepté mon invitation.'
+          signature = concerned
+        break;
     }
     const htmlContent = `
       <!DOCTYPE html>
@@ -355,6 +368,12 @@ async function sendReminderMail(guest, event) {
           eventType = 'anniversaire de ' + concerned
           signature = concerned
         break;
+      default:
+          concerned = event.event_name_concerned1
+          article ='à la '
+          eventType = 'événement professionnel'
+          signature = concerned
+      break;
     }
     const htmlContent = `
       <!DOCTYPE html>
@@ -505,7 +524,7 @@ async function sendFileQRCodeMail(data, qrCodeUrl) {
         break;
       default:
           article = "l'"
-          eventType = 'événement'
+          eventType = 'événement professionnel'
           concerned = event.event_name_concerned1
         break;
     }
@@ -982,6 +1001,16 @@ async function sendThankYouMailToPresentGuests(event, schedules, organizer, gues
         sentences_2 = "J'espére vous revoir très bientôt lors de nos prochaines rencontres."
         sentences_3 = "Avec mes sincères remerciements,"
         concerned = event.event_name_concerned1
+      break;
+    default :
+      eventType = 'événement professionnel';
+      sentences =
+        `Je tiens à vous remercier chaleureusement pour votre présence à notre ${eventType}.`;
+      sentences_2 =
+        "Votre participation a grandement contribué au succès de cette rencontre et nous espérons avoir le plaisir de vous accueillir à nouveau lors de nos prochains événements.";
+      sentences_3 =
+        "Avec nos sincères remerciements,";
+      concerned = event.event_name_concerned1;
       break;
   }
   const htmlContent = `

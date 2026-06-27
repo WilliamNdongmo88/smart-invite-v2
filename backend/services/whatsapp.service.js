@@ -236,9 +236,9 @@ const sendGuestWhatsapp = async ( guest, event, token ) => {
                 concerned =
                     event.event_name_concerned1;
 
-                article = "à l'";
+                article = "à la ";
 
-                eventType = 'événement';
+                eventType = 'événement professionnel';
 
                 sentence =
                     `Nous avons le plaisir de vous inviter`;
@@ -492,8 +492,8 @@ const sendFileQRCodeWhatsapp = async (data, qrCodeUrl) => {
                 break;
 
             default:
-                article = "l'";
-                eventType = 'événement';
+                article = "à la ";
+                eventType = 'événement professionnel';
                 concerned = event.event_name_concerned1;
                 break;
         }
@@ -702,9 +702,9 @@ const whatsappInvitationToGuest = async ( data, qrCodeUrl, pdfBuffer ) => {
                 concerned =
                     event.event_name_concerned1;
 
-                article = "à l'";
+                article = "à la ";
 
-                eventType = 'événement';
+                eventType = 'événement professionnel';
 
                 sentence =
                     `Merci d'avoir accepté notre invitation.`;
@@ -1275,9 +1275,9 @@ const sendReminderWhatsapp = async ( guest, event ) => {
                 concerned =
                     event.event_name_concerned1;
 
-                article = "à l'";
+                article = "à la ";
 
-                eventType = 'événement';
+                eventType = 'événement professionnel';
 
                 signature = concerned;
 
@@ -1792,6 +1792,17 @@ async function sendThankYouWhatsappToPresentGuests( event, schedules, organizer,
           "J'espère vous revoir très bientôt lors de nos prochaines rencontres.";
         sentences_3 =
           "Avec mes sincères remerciements,";
+        concerned = event.event_name_concerned1;
+        break;
+
+      default:
+        eventType = 'événement professionnel';
+        sentences =
+            `Je tiens à vous remercier chaleureusement pour votre présence à notre ${eventType}.`;
+        sentences_2 =
+            "Votre participation a grandement contribué au succès de cette rencontre et nous espérons avoir le plaisir de vous accueillir à nouveau lors de nos prochains événements.";
+        sentences_3 =
+            "Avec nos sincères remerciements,";
         concerned = event.event_name_concerned1;
         break;
     }
