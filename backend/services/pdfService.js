@@ -4,7 +4,7 @@ const path = require('path');
 const { getEventInvitNote, updateCodeEventInvNote } = require('../models/event_invitation_notes');
 require('pdfkit-table');
 
-async function generateGuestPdf(data, card = null, plusOneName = null) {
+async function generateGuestPdf(data, card = null) {
   const guest = data || {};
   const event = data || {};
 
@@ -43,7 +43,6 @@ async function generateGuestPdf(data, card = null, plusOneName = null) {
 
   const eventType = value('event.type') || 'wedding';
   const guestName = value('guest.full_name', 'guest.name', 'guest.guestName') || 'invite';
-  const companionName = value('guest.plus_one_name', 'guest.plusOneName') || plusOneName;
 
   const titleColor = value('card.title_color') || '#b58b63';
   const textColor = value('card.text_color') || '#444444';
@@ -197,10 +196,7 @@ async function generateGuestPdf(data, card = null, plusOneName = null) {
       after: 18,
     });
 
-    writeText(
-      companionName
-        ? `Cher/Chere ${guestName} et ${companionName},`
-        : `Cher/Chere ${guestName},`,
+    writeText(`Cher/Chere ${guestName},`,
       {
         font: 'Times-BoldItalic',
         size: 11,
@@ -395,14 +391,12 @@ async function generatePresentGuestsPdf(guests = [], event) {
     .text(`Nombre d'invité(s) : ${guests.length}`);
 
     // --- COLUMNS ---
-    // Ajustement des largeurs pour que le total ne dépasse pas tableWidth (530)
+    // Ajustement des largeurs pour que le total ne dépasse pas tableWidth (600)
     const columns = [
-      { label: "Nom", key: "name", width: 110 },
-      { label: "Nom +1", key: "plusOneName", width: 100 },
-      { label: "N° Table", key: "tableNumber", width: 50 },
-      { label: "Restrictions", key: "dietaryRestrictions", width: 95 },
-      { label: "Restr. +1", key: "plusOnedietaryRestrictions", width: 95 },
-      { label: "Statut", key: "status", width: 80 },
+      { label: "Nom", key: "name", width: 160 },
+      { label: "N° Table", key: "tableNumber", width: 100 },
+      { label: "Restrictions", key: "dietaryRestrictions", width: 170 },
+      { label: "Statut", key: "status", width: 140 },
     ];
 
     // Fonction pour dessiner l'en-tête du tableau
@@ -450,9 +444,7 @@ async function generatePresentGuestsPdf(guests = [], event) {
       columns.forEach((col) => {
         let value = g[col.key];
 
-        if (col.key === "plusOneName" && !g.plusOne) value = "-";
         if (col.key === "tableNumber" && !g.tableNumber) value = "-";
-        if (col.key === "plusOnedietaryRestrictions" && !g.plusOne) value = "-";
 
         if (col.key === "status") {
           doc.fillColor(color);
@@ -515,28 +507,18 @@ async function generateDualGuestListPdf(presentGuests = [], confirmedAbsentGuest
     doc.text(`${event.title}`);
     doc.moveDown(0.5);
 
-   //  doc.fontSize(10).font("Helvetica-Bold").fillColor("#2d2d2d")
-   //  .text("Date et heure :");
-   //  doc.fontSize(10).font("Helvetica").text(`${event.eventDate} à ${event.eventTime}`);
-   //  doc.moveDown(0.5);
-
-   //  doc.fontSize(10).font("Helvetica-Bold").fillColor("#2d2d2d")
-   //  .text("Lieu :");
-   //  doc.fontSize(10).font("Helvetica").text(`${event.eventLocation}`);
-   //  doc.moveDown(1.5);
-
     // --- DÉFINITION DES COLONNES ---
     // Total des largeurs: 150 + 150 + 100 + 110 = 510. tableWidth = 510. C'est bon.
     const presentColumns = [
       { label: "Nom", key: "name", width: 150 },
-      { label: "Nom +1", key: "plusOneName", width: 150 },
+      { label: "N° Table", key: "tableNumber", width: 50 },
       { label: "Heure Arrivée", key: "dateTime", width: 150 },
       { label: "Statut", key: "status", width: 130 },
     ];
 
     const confirmedAbsentColumns = [
       { label: "Nom", key: "name", width: 150 },
-      { label: "Nom +1", key: "plusOneName", width: 150 },
+      { label: "N° Table", key: "tableNumber", width: 50 },
       { label: "Date Acceptée", key: "updatedAt", width: 150 },
       { label: "Statut", key: "status", width: 130 },
     ];

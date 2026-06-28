@@ -28,14 +28,6 @@ const initGuestModel = async () => {
   console.log('✅ Table GUESTS prête !');
 };
 
-// async function createGuest(eventId, fullName, email, phoneNumber, 
-//             rsvpStatus, guesthasPlusOneAutoriseByAdmin) {
-//     const [result] = await pool.execute(`INSERT INTO GUESTS (event_id, full_name, email, phone_number, 
-//         rsvp_status, guest_has_plus_one_autorise_by_admin) VALUES(?,?,?,?,?,?)`, 
-//         [eventId, fullName, email, phoneNumber, rsvpStatus, guesthasPlusOneAutoriseByAdmin]);
-//     //console.log("[createGuest] result :: ", result.insertId);
-//     return result.insertId;
-// }
 async function createGuest( 
     connection, eventId, fullName, email,
     phoneNumber, rsvpStatus, guesthasPlusOneAutoriseByAdmin, notificationMode
@@ -143,6 +135,7 @@ async function getGuestByEventIdAndConfirmedRsvp(eventId) {
             g.id AS guestId,
             g.full_name AS name,
             g.phone_number AS phone,
+            g.table_number AS tableNumber,
             g.plus_one_name AS plusOneName,
             g.rsvp_status AS rsvpStatus,
             g.updated_at AS updatedAt,
@@ -163,6 +156,7 @@ async function getAllPresentGuest(guestId) {
             g.full_name,
             g.email,
             g.phone_number,
+            g.table_number,
             g.rsvp_status,
             g.notification_mode
         FROM GUESTS g
@@ -179,6 +173,7 @@ async function getEventByGuestId(guestId) {
             g.full_name AS guestName,
             g.email AS guestEmail,
             g.phone_number AS guestPhone,
+            g.table_number,
             g.notification_mode,
             g.rsvp_status AS rsvpStatus,
             g.guest_has_plus_one_autorise_by_admin AS guestHasPlusOneAutoriseByAdmin,
@@ -220,6 +215,7 @@ async function getGuestAndEventRelatedById(guestId) {
             g.full_name,
             g.email,
             g.phone_number,
+            g.table_number,
             g.notification_mode,
             g.rsvp_status,
             g.plus_one_name,
@@ -254,6 +250,7 @@ async function getAllGuestAndInvitationRelated() {
             g.full_name,
             g.email,
             g.phone_number,
+            g.table_number,
             g.notification_mode,
             g.rsvp_status,
             g.has_plus_one,

@@ -751,7 +751,7 @@ const updateGuest = async (req, res, next) => {
                     const card = await getEventInvitNote(event[0].eventId);
                     let buffer = null;
                     if(!card.has_invitation_model_card){
-                        buffer = await generateGuestPdf(guest, card, plusOneName);
+                        buffer = await generateGuestPdf(guest, card);
                         await uploadPdfToFirebase(guest, buffer);
                         if(guest.notification_mode === 'email') {
                             await sendInvitationToGuest(guest, guest.qrCodeUrl, buffer);

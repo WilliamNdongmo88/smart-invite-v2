@@ -101,6 +101,7 @@ async function getGuestByInvitationId(invitationId) {
             i.used_at AS usedAt,
             g.id AS guestId,
             g.full_name AS name,
+            g.table_number AS tableNumber,
             g.plus_one_name AS plusOneName,
             g.rsvp_status AS rsvpStatus
         FROM INVITATIONS i

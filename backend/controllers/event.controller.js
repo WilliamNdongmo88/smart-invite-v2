@@ -531,7 +531,7 @@ const getAllEvents = async (req, res, next) => {
                 const timer2 = guest.usedAt.toISOString().split('T')[1]
                 const obj = {
                     name: guest.name,
-                    plusOneName: guest.plusOneName,
+                    tableNumber: guest.tableNumber,
                     rsvpStatus: guest.rsvpStatus,
                     dateTime: timer1.split(':')[0]+':'+timer1.split(':')[1].split(':')[0],
                     usedAt: timer2.split(':')[0]+':'+timer2.split(':')[1].split(':')[0],
@@ -546,7 +546,7 @@ const getAllEvents = async (req, res, next) => {
                 name: elt.name,
                 phone: elt.phone,
                 notificationMode: elt.notificationMode,
-                plusOneName: elt.plusOneName,
+                tableNumber: elt.tableNumber,
                 rsvpStatus: elt.rsvpStatus,
                 updatedAt: elt.updatedAt.toISOString().split('T')[0],
             }
