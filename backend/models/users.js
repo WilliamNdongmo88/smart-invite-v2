@@ -60,11 +60,11 @@ async function createDefaultAdmin() {
     }
 }
 
-async function createUser({ managerId=null, name, email, password, acceptTerms, role = 'user', isActive = false, avatar_url = null, notificationMode = 'email' }) {
+async function createUser({ managerId=null, name, email, password, phoneNumber, notificationMode = 'email', acceptTerms, role = 'user', isActive = false, avatar_url = null }) {
   const hashed = await bcrypt.hash(password, 10);
   const [result] = await pool.query(
-    `INSERT INTO USERS (manager_id, name, email, notification_mode, password, accept_terms, role, is_active, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [managerId || null , name, email, notificationMode, hashed, acceptTerms, role, isActive, avatar_url]
+    `INSERT INTO USERS (manager_id, name, email, password, phone, notification_mode, accept_terms, role, is_active, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [managerId || null , name, email, hashed, phoneNumber , notificationMode, acceptTerms, role, isActive, avatar_url]
   );
   return result.insertId;
 }

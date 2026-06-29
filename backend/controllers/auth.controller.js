@@ -225,7 +225,7 @@ const getAllUsersService = async (users) => {
 
 const register = async (req, res, next) => {
   try {
-    let { name, email, password, acceptTerms, role } = req.body;
+    let { name, email, password, phoneNumber, notificationMode, acceptTerms, role } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
 
     const existing = await getUserByEmail(email);
@@ -235,6 +235,8 @@ const register = async (req, res, next) => {
       name,
       email,
       password,
+      phoneNumber, 
+      notificationMode,
       acceptTerms,
       role: 'user'
     });

@@ -508,19 +508,19 @@ async function generateDualGuestListPdf(presentGuests = [], confirmedAbsentGuest
     doc.moveDown(0.5);
 
     // --- DÉFINITION DES COLONNES ---
-    // Total des largeurs: 150 + 150 + 100 + 110 = 510. tableWidth = 510. C'est bon.
+    // Total des largeurs: 150 + 150 + 100 + 110 = 510. tableWidth = 600. C'est bon.
     const presentColumns = [
-      { label: "Nom", key: "name", width: 150 },
-      { label: "N° Table", key: "tableNumber", width: 50 },
-      { label: "Heure Arrivée", key: "dateTime", width: 150 },
-      { label: "Statut", key: "status", width: 130 },
+      { label: "Nom", key: "name", width: 160 },
+      { label: "N° Table", key: "tableNumber", width: 100 },
+      { label: "Heure Arrivée", key: "dateTime", width: 170 },
+      { label: "Statut", key: "status", width: 140 },
     ];
 
     const confirmedAbsentColumns = [
-      { label: "Nom", key: "name", width: 150 },
-      { label: "N° Table", key: "tableNumber", width: 50 },
-      { label: "Date Acceptée", key: "updatedAt", width: 150 },
-      { label: "Statut", key: "status", width: 130 },
+      { label: "Nom", key: "name", width: 160 },
+      { label: "N° Table", key: "tableNumber", width: 100 },
+      { label: "Date Acceptée", key: "updatedAt", width: 170 },
+      { label: "Statut", key: "status", width: 140 },
     ];
 
     // Fonction pour dessiner l'en-tête du tableau
