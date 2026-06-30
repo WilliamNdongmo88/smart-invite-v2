@@ -53,7 +53,7 @@ async function generateGuestPdf(data, card = null) {
   const mainMessage = value('card.main_message') || value('event.description') || '';
   const mainMessagePart1 = value('card.mainMessage_part1') || mainMessage;
   const mainMessagePart2 = value('card.mainMessage_part2');
-  const eventTitle = value('event.eventTitle', 'event.title') || 'cet evenement';
+  const eventTitle = value('event.title','event.event_title','event.eventTitle') || 'cet evenement';
 
   const banquetTime = cleanTime(value('event.banquet_time', 'event.banquetTime'));
   const religiousTime = cleanTime(value('event.religious_time', 'event.religiousTime'));
